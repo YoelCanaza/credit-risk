@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿A quién prestarle? — Simulador de riesgo crediticio</title>
+  <meta name="description" content="Modelo predictivo y explicable de riesgo crediticio con aprendizaje supervisado (German Credit Data, UCI). Proyecto de Aprendizaje de Máquina — UNA Puno.">
+  <link rel="icon" href="img/unap.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+  <script>
+    // Aplica el tema guardado antes de pintar (evita parpadeo)
+    try { const t = localStorage.getItem("tema"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+
+<!-- ============ NAVEGACIÓN ============ -->
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="nav__marca" href="#inicio">
+      <span class="nav__logo" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>¿A quién prestarle?</span>
+    </a>
+    <nav class="nav__links" id="navLinks" aria-label="Secciones">
+      <a href="#problema">Problema</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#modelo">Modelo</a>
+      <a href="#simulador" class="nav__cta">Simulador</a>
+      <a href="#resultados">Resultados</a>
+      <a href="#equidad">Equidad</a>
+      <a href="#galeria">Galería</a>
+      <a href="#equipo">Equipo</a>
+    </nav>
+    <button class="nav__tema" id="btnTema" type="button" aria-label="Cambiar tema claro u oscuro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+    </button>
+    <button class="nav__menu" id="btnMenu" type="button" aria-label="Abrir menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav__progreso" id="progreso"></div>
+</header>
+
+<main>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="inicio">
+  <svg class="hero__red" id="heroRed" viewBox="0 0 600 520" aria-hidden="true"></svg>
+  <div class="contenedor hero__contenido">
+    <p class="eyebrow eyebrow--claro">Proyecto Unidad I · Aprendizaje supervisado</p>
+    <h1 class="hero__titulo">¿A quién <span>prestarle?</span></h1>
+    <p class="hero__sub">Un modelo predictivo y explicable de riesgo crediticio que no solo busca acertar: decide según el <strong>costo real de sus errores</strong>, explica <strong>por qué</strong> decide y mide si trata a todos por igual.</p>
+    <div class="hero__acciones">
+      <a class="btn btn--primario" href="#simulador">Probar el simulador
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn--fantasma" href="#resultados">Ver resultados</a>
+    </div>
+    <dl class="hero__stats">
+      <div><dt>Solicitantes</dt><dd><span class="contador" data-fin="1000" data-miles>0</span></dd></div>
+      <div><dt>Algoritmos comparados</dt><dd><span class="contador" data-fin="4">0</span></dd></div>
+      <div><dt>Menos costo que aprobar a todos</dt><dd><span class="contador" data-fin="62">0</span>&nbsp;%</dd></div>
+    </dl>
+  </div>
+  <a class="hero__bajar" href="#problema" aria-label="Bajar"><span></span></a>
+</section>
+
+<!-- ============ PROBLEMA ============ -->
+<section class="seccion" id="problema">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">01 · El problema</p>
+      <h2>Equivocarse cuesta, pero no siempre lo mismo</h2>
+      <p class="seccion__intro">Cuando alguien pide un préstamo, la entidad decide con información limitada. Puede fallar de dos formas, y los autores del dataset definieron cuánto cuesta cada una.</p>
+    </header>
+
+    <div class="problema">
+      <article class="tarjeta error error--grave revelar">
+        <div class="error__costo"><span>5</span><small>de costo</small></div>
+        <h3>Aprobar a un mal pagador</h3>
+        <p>La entidad presta y no recupera el dinero: es una pérdida directa.</p>
+      </article>
+
+      <div class="balanza revelar" aria-hidden="true">
+        <svg viewBox="0 0 260 200" id="balanza">
+          <line x1="130" y1="30" x2="130" y2="180" class="balanza__eje"/>
+          <path d="M90 186h80" class="balanza__eje"/>
+          <g class="balanza__brazo">
+            <line x1="30" y1="40" x2="230" y2="40" class="balanza__eje"/>
+            <g class="balanza__plato balanza__plato--izq">
+              <line x1="30" y1="40" x2="10" y2="100"/><line x1="30" y1="40" x2="50" y2="100"/>
+              <path d="M4 100h52a26 14 0 0 1-52 0z"/>
+              <text x="30" y="92">5</text>
+            </g>
+            <g class="balanza__plato balanza__plato--der">
+              <line x1="230" y1="40" x2="210" y2="100"/><line x1="230" y1="40" x2="250" y2="100"/>
+              <path d="M204 100h52a26 14 0 0 1-52 0z"/>
+              <text x="230" y="92">1</text>
+            </g>
+          </g>
+          <circle cx="130" cy="30" r="6" class="balanza__pivote"/>
+        </svg>
+        <p class="balanza__texto">Un error <strong>pesa 5 veces más</strong> que el otro</p>
+      </div>
+
+      <article class="tarjeta error error--leve revelar">
+        <div class="error__costo"><span>1</span><small>de costo</small></div>
+        <h3>Rechazar a un buen cliente</h3>
+        <p>Se pierde un cliente que sí habría pagado, y la persona se queda sin crédito.</p>
+      </article>
+    </div>
+
+    <div class="matriz-bloque revelar">
+      <div>
+        <h3>La matriz de costos</h3>
+        <p>Por eso el proyecto no elige el modelo con más aciertos, sino el que produce el <strong>menor costo total</strong>:</p>
+        <p class="formula">Costo = 5 × (malos aprobados) + 1 × (buenos rechazados)</p>
+        <p class="nota-pequena">En el Perú, donde muchas personas tienen poco historial bancario y gran parte del crédito llega a través de microfinancieras y cajas municipales, decidir bien —y con justicia— es clave para la inclusión financiera.</p>
+      </div>
+      <table class="matriz" aria-label="Matriz de costos">
+        <thead><tr><th></th><th>Predice: bueno</th><th>Predice: malo</th></tr></thead>
+        <tbody>
+          <tr><th>Real: bueno</th><td class="m-ok">0</td><td class="m-leve">1</td></tr>
+          <tr><th>Real: malo</th><td class="m-grave">5</td><td class="m-ok">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DATASET ============ -->
+<section class="seccion seccion--alterna" id="dataset">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">02 · Los datos</p>
+      <h2>Statlog (German Credit Data)</h2>
+      <p class="seccion__intro">Un conjunto de datos clásico del <a href="https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data" target="_blank" rel="noopener">UCI Machine Learning Repository</a>, donado por el Prof. Hans Hofmann (Universidad de Hamburgo). Cada fila es una persona que recibió un crédito y la etiqueta indica si fue buena o mala pagadora: por eso es un problema de <strong>aprendizaje supervisado</strong>.</p>
+    </header>
+
+    <div class="dataset">
+      <div class="dataset__cifras revelar">
+        <div class="cifra"><span class="contador" data-fin="1000" data-miles>0</span><small>solicitantes</small></div>
+        <div class="cifra"><span class="contador" data-fin="20">0</span><small>variables predictoras</small></div>
+        <div class="cifra"><span class="contador" data-fin="13">0</span><small>categóricas · 7 numéricas</small></div>
+        <div class="cifra"><span class="contador" data-fin="0">0</span><small>valores faltantes</small></div>
+      </div>
+      <figure class="tarjeta dataset__dona revelar">
+        <svg viewBox="0 0 200 200" id="dona" role="img" aria-label="700 buenos pagadores (70 %) y 300 malos pagadores (30 %)"></svg>
+        <figcaption>
+          <span class="leyenda"><i class="sw sw--bueno"></i>Buenos pagadores · 700</span>
+          <span class="leyenda"><i class="sw sw--malo"></i>Malos pagadores · 300</span>
+        </figcaption>
+      </figure>
+      <div class="tarjeta dataset__ficha revelar">
+        <dl>
+          <div><dt>Fuente</dt><dd>UCI Machine Learning Repository</dd></div>
+          <div><dt>DOI</dt><dd><a href="https://doi.org/10.24432/C5NC77" target="_blank" rel="noopener">10.24432/C5NC77</a></dd></div>
+          <div><dt>Licencia</dt><dd>CC BY 4.0</dd></div>
+          <div><dt>Objetivo</dt><dd>Riesgo: bueno / malo (clasificación binaria)</dd></div>
+          <div><dt>Moneda</dt><dd>Marcos alemanes (DM), moneda ya inexistente</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <h3 class="subtitulo revelar">Las 20 variables <small>Resaltadas: las 8 que usa el simulador · tachadas: excluidas por ética</small></h3>
+    <ul class="chips revelar" id="chipsVariables"></ul>
+
+    <h3 class="subtitulo revelar">Lo que revelan los datos</h3>
+    <div class="mini-graficos">
+      <figure class="tarjeta revelar"><figcaption><strong>Más plazo, más riesgo</strong><span>% de malos pagadores por duración</span></figcaption><div class="grafico" id="gDuracion"></div></figure>
+      <figure class="tarjeta revelar"><figcaption><strong>La cuenta corriente lo dice casi todo</strong><span>% de malos pagadores por saldo</span></figcaption><div class="grafico" id="gCuenta"></div></figure>
+      <figure class="tarjeta revelar"><figcaption><strong>Los jóvenes, más riesgosos en los datos</strong><span>% de malos pagadores por edad</span></figcaption><div class="grafico" id="gEdad"></div></figure>
+    </div>
+    <p class="nota-pequena revelar">La línea punteada marca el promedio general (30 %). Pasa el cursor sobre las barras para ver cuántas personas hay en cada grupo.</p>
+  </div>
+</section>
+
+<!-- ============ MODELO ============ -->
+<section class="seccion" id="modelo">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">03 · Cómo funciona</p>
+      <h2>Del dato a la decisión</h2>
+      <p class="seccion__intro">Comparamos cuatro algoritmos de clasificación supervisada. La regla de oro: <strong>el conjunto de prueba nunca se usó para elegir nada</strong>, solo para medir el resultado final.</p>
+    </header>
+
+    <ol class="flujo" id="flujo">
+      <li class="revelar"><span class="flujo__n">1</span><h3>Datos</h3><p>1 000 solicitantes descargados de UCI y traducidos al español.</p></li>
+      <li class="revelar"><span class="flujo__n">2</span><h3>Selección ética</h3><p>Se excluyen sexo/estado civil y nacionalidad. Quedan 18 variables.</p></li>
+      <li class="revelar"><span class="flujo__n">3</span><h3>División</h3><p>75 % entrenamiento y 25 % prueba, estratificada (30 % malos en ambas).</p></li>
+      <li class="revelar"><span class="flujo__n">4</span><h3>Entrenamiento</h3><p>GridSearchCV con validación cruzada de 5 particiones (ROC-AUC).</p></li>
+      <li class="revelar"><span class="flujo__n">5</span><h3>Umbral por costos</h3><p>Se baja el umbral para minimizar 5 × FN + 1 × FP en validación cruzada.</p></li>
+      <li class="revelar"><span class="flujo__n">6</span><h3>Evaluación</h3><p>Métricas y costo en los 250 casos de prueba nunca vistos.</p></li>
+      <li class="revelar"><span class="flujo__n">7</span><h3>Explicación y equidad</h3><p>Importancia, odds ratios y trato por edad y sexo.</p></li>
+      <li class="revelar"><span class="flujo__n">8</span><h3>Modelo web</h3><p>Regresión logística de 8 variables, sin edad, que corre en tu navegador.</p></li>
+    </ol>
+
+    <div class="algoritmos" id="algoritmos"></div>
+
+    <div class="explica revelar">
+      <div class="tarjeta explica__formula">
+        <h3>Lo que calcula el simulador</h3>
+        <p>Cada respuesta del formulario suma o resta puntos a un valor <em>z</em>. Luego la función logística lo convierte en un puntaje entre 0 y 100 %:</p>
+        <p class="formula formula--grande">P(malo) = 1 / (1 + e<sup>−z</sup>)</p>
+        <p>Si el puntaje es <strong>34 % o más</strong>, el modelo recomienda rechazar.</p>
+      </div>
+      <div class="tarjeta explica__umbral">
+        <h3>¿Por qué 34 % y no 50 %?</h3>
+        <p>Con el umbral de 50 %, ambos errores pesan igual. Como aprobar a un mal pagador cuesta 5 veces más, conviene rechazar antes. La teoría indica rechazar cuando el riesgo supera <strong>1 / (1 + 5) ≈ 17 %</strong>; como el modelo se entrenó con clases balanceadas, su puntaje está «inflado» y el umbral óptimo, elegido con validación cruzada, resultó <strong>34 %</strong>.</p>
+        <div class="umbral-barra" aria-hidden="true"><span class="umbral-barra__marca" style="--pos:34%"><b>34 %</b></span><span class="umbral-barra__marca umbral-barra__marca--gris" style="--pos:50%"><b>50 %</b></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SIMULADOR ============ -->
+<section class="seccion seccion--simulador" id="simulador">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">04 · Demostración</p>
+      <h2>Simulador: ¿qué pasaría si…?</h2>
+      <p class="seccion__intro">Completa el perfil de un solicitante. El puntaje se recalcula al instante, y verás qué factores lo suben, cuáles lo bajan y qué cambio mínimo cambiaría la decisión.</p>
+    </header>
+
+    <div class="perfiles revelar" role="group" aria-label="Perfiles de ejemplo">
+      <span>Cargar un perfil:</span>
+      <button type="button" class="perfil" data-perfil="bajo">Riesgo bajo</button>
+      <button type="button" class="perfil" data-perfil="limite">Caso límite</button>
+      <button type="button" class="perfil" data-perfil="alto">Riesgo alto</button>
+      <button type="button" class="perfil" data-perfil="azar">Al azar</button>
+      <button type="button" class="perfil perfil--sutil" data-perfil="base">Reiniciar</button>
+    </div>
+
+    <div class="sim">
+      <form class="sim__form tarjeta" id="formSim" autocomplete="off" onsubmit="return false">
+        <fieldset>
+          <legend>El crédito</legend>
+          <div class="campo">
+            <label for="duracion_meses">Duración <output id="o_duracion_meses"></output></label>
+            <input type="range" id="duracion_meses" min="4" max="72" step="1">
+            <div class="campo__escala"><span>4 meses</span><span>72 meses</span></div>
+          </div>
+          <div class="campo">
+            <label for="monto_credito">Monto <output id="o_monto_credito"></output></label>
+            <input type="range" id="monto_credito" min="250" max="18424" step="50">
+            <div class="campo__escala"><span>250 DM</span><span>18 424 DM</span></div>
+          </div>
+          <div class="campo">
+            <span class="campo__etiqueta" id="lbl_cuota">Peso de la cuota sobre el ingreso disponible</span>
+            <div class="segmentado" id="cuota_pct_ingreso" role="radiogroup" aria-labelledby="lbl_cuota"></div>
+            <div class="campo__escala"><span>1 · menor</span><span>4 · mayor</span></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>El solicitante</legend>
+          <div class="campo"><label for="cuenta_corriente">Cuenta corriente</label><select id="cuenta_corriente"></select></div>
+          <div class="campo"><label for="ahorros">Ahorros</label><select id="ahorros"></select></div>
+          <div class="campo"><label for="historial_credito">Historial crediticio</label><select id="historial_credito"></select></div>
+          <div class="campo"><label for="otros_planes_pago">Otros créditos o planes de pago</label><select id="otros_planes_pago"></select></div>
+          <div class="campo"><label for="propiedad">Propiedad</label><select id="propiedad"></select></div>
+        </fieldset>
+      </form>
+
+      <div class="sim__resultado">
+        <div class="tarjeta medidor-tarjeta" aria-live="polite">
+          <div class="medidor-caja">
+            <svg viewBox="0 0 320 196" class="medidor" id="medidor" role="img" aria-labelledby="puntajeTexto"></svg>
+            <div class="medidor__valor"><span id="puntaje">0</span><small>%</small></div>
+          </div>
+          <p class="medidor__etiqueta" id="puntajeTexto">Puntaje de riesgo</p>
+          <div class="veredicto" id="veredicto"></div>
+          <svg class="traza" id="traza" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <p class="traza__leyenda">Recorrido del puntaje en tus últimos cambios · línea punteada = umbral 34 %</p>
+        </div>
+
+        <div class="tarjeta">
+          <h3 class="tarjeta__titulo">¿Por qué este resultado?</h3>
+          <p class="tarjeta__sub">Contribución de cada respuesta al puntaje. <span class="leyenda"><i class="sw sw--sube"></i>aumenta el riesgo</span> <span class="leyenda"><i class="sw sw--baja"></i>lo reduce</span></p>
+          <div class="contrib" id="contrib"></div>
+          <p class="frases" id="frases"></p>
+        </div>
+
+        <div class="tarjeta cf">
+          <h3 class="tarjeta__titulo" id="cfTitulo">¿Qué cambiaría la decisión?</h3>
+          <p class="tarjeta__sub" id="cfSub"></p>
+          <div class="cf__lista" id="cfLista"></div>
+        </div>
+      </div>
+    </div>
+    <p class="aviso revelar"><strong>Uso educativo.</strong> El puntaje es una estimación <em>relativa</em> (el modelo se entrenó con clases balanceadas), no una probabilidad calibrada de impago. Los datos son alemanes, antiguos y en marcos alemanes: esta herramienta <strong>no</strong> debe usarse para evaluar créditos reales.</p>
+  </div>
+</section>
+
+<!-- ============ RESULTADOS ============ -->
+<section class="seccion" id="resultados">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">05 · Resultados</p>
+      <h2>La accuracy engaña; el costo no</h2>
+      <p class="seccion__intro">Los cuatro modelos se evaluaron en 250 solicitantes de prueba (75 malos y 175 buenos). Sin modelo, aprobar a todos costaría <strong>375</strong> y rechazar a todos, <strong>175</strong>.</p>
+    </header>
+
+    <div class="leyenda-modelos revelar" id="leyendaModelos"></div>
+
+    <div class="rejilla-2">
+      <figure class="tarjeta revelar">
+        <figcaption><strong>Capacidad de ordenar por riesgo</strong><span>ROC-AUC en validación cruzada (entrenamiento) · 1 = perfecto, 0,5 = azar</span></figcaption>
+        <div class="grafico" id="gAuc"></div>
+      </figure>
+      <figure class="tarjeta revelar">
+        <figcaption><strong>Ajustar el umbral reduce el costo</strong><span>Costo total en prueba · <span class="leyenda"><i class="sw sw--gris"></i>umbral 0,5</span> <span class="leyenda"><i class="sw sw--azul"></i>umbral ajustado</span></span></figcaption>
+        <div class="grafico" id="gCosto"></div>
+      </figure>
+    </div>
+
+    <div class="tarjeta tabla-tarjeta revelar">
+      <div class="tabla-cabecera">
+        <h3 class="tarjeta__titulo">Métricas en el conjunto de prueba</h3>
+        <div class="pestanas" role="tablist">
+          <button role="tab" aria-selected="true" data-tabla="05">Umbral 0,5</button>
+          <button role="tab" aria-selected="false" data-tabla="opt">Umbral ajustado</button>
+        </div>
+      </div>
+      <div class="tabla-scroll"><table class="tabla" id="tablaMetricas"></table></div>
+      <p class="nota-pequena" id="notaTabla"></p>
+    </div>
+
+    <div class="final revelar">
+      <div class="tarjeta final__texto">
+        <p class="eyebrow">Modelo final</p>
+        <h3>Random Forest con umbral 0,28</h3>
+        <p>Elegido por tener el <strong>menor costo en validación cruzada</strong> (0,512 por solicitante, frente a 0,520 de la regresión logística). En prueba detecta a <strong>65 de los 75</strong> malos pagadores.</p>
+        <ul class="kpis" id="kpisFinal"></ul>
+      </div>
+      <div class="confusiones" id="confusiones"></div>
+    </div>
+
+    <div class="rejilla-2">
+      <figure class="tarjeta revelar">
+        <figcaption><strong>¿Qué variables pesan más?</strong><span>Importancia por permutación en Random Forest · caída del ROC-AUC al desordenar la variable</span></figcaption>
+        <div class="grafico" id="gImportancia"></div>
+      </figure>
+      <figure class="tarjeta revelar">
+        <figcaption><strong>¿En qué dirección?</strong><span>Odds ratios de la regresión logística · &gt; 1 aumenta el riesgo, &lt; 1 lo reduce</span></figcaption>
+        <div class="grafico" id="gOdds"></div>
+      </figure>
+    </div>
+
+    <ul class="mensajes" id="mensajes">
+      <li class="revelar"><b>1</b><p><strong>La accuracy engaña.</strong> Gradient Boosting tuvo la mayor accuracy (76,4 %) y el mayor costo (219) con el umbral estándar.</p></li>
+      <li class="revelar"><b>2</b><p><strong>El umbral importa tanto como el algoritmo.</strong> Ajustarlo redujo el costo hasta un 39 %.</p></li>
+      <li class="revelar"><b>3</b><p><strong>Lo simple compite.</strong> La regresión logística logró el mayor ROC-AUC en prueba (0,811).</p></li>
+      <li class="revelar"><b>4</b><p><strong>La equidad se mide.</strong> Sin usar el sexo, el modelo rechaza más a las mujeres; y quitar la edad reduce, pero no elimina, la brecha con los jóvenes.</p></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ EQUIDAD ============ -->
+<section class="seccion seccion--alterna" id="equidad">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">06 · Equidad</p>
+      <h2>¿El modelo trata igual a todos?</h2>
+      <p class="seccion__intro">Medimos qué porcentaje de las personas que <strong>sí habrían pagado</strong> es rechazado en cada grupo (predicciones de validación cruzada sobre los 1 000 solicitantes).</p>
+    </header>
+
+    <div class="rejilla-equidad">
+      <figure class="tarjeta revelar">
+        <figcaption><strong>Buenos pagadores rechazados por edad</strong><span><span class="leyenda"><i class="sw sw--rf"></i>Random Forest (usa edad)</span> <span class="leyenda"><i class="sw sw--web"></i>Modelo web (sin edad)</span></span></figcaption>
+        <div class="grafico" id="gEquidadEdad"></div>
+      </figure>
+      <div class="equidad__datos">
+        <div class="tarjeta dato-grande revelar">
+          <span class="dato-grande__valor"><span class="contador" data-fin="78">0</span>&nbsp;%</span>
+          <p>de los jóvenes de 19 a 25 años que sí habrían pagado son rechazados por el modelo final, frente al 44–48 % de los mayores de 36.</p>
+        </div>
+        <div class="tarjeta dato-grande revelar">
+          <span class="dato-grande__valor">34 → 17</span>
+          <p>puntos de brecha entre grupos de edad al retirar la edad del modelo web. Mejora, pero <strong>no desaparece</strong>, y aumentan los rechazos de adultos.</p>
+        </div>
+        <div class="tarjeta dato-grande revelar">
+          <span class="dato-grande__valor">59 % <small>vs</small> 52 %</span>
+          <p>de buenas pagadoras mujeres frente a buenos pagadores hombres rechazados, aunque el modelo no usa el sexo.</p>
+        </div>
+      </div>
+    </div>
+    <p class="cita revelar">«Excluir una variable sensible no garantiza la igualdad de trato: la equidad debe <strong>medirse</strong>, no suponerse.»</p>
+  </div>
+</section>
+
+<!-- ============ GALERÍA ============ -->
+<section class="seccion" id="galeria">
+  <div class="contenedor">
+    <header class="seccion__cabecera revelar">
+      <p class="eyebrow">07 · Del cuaderno</p>
+      <h2>Galería de gráficos</h2>
+      <p class="seccion__intro">Los 24 gráficos generados por el cuaderno de Google Colab. Haz clic para ampliarlos.</p>
+    </header>
+    <div class="filtros revelar" id="filtrosGaleria" role="group" aria-label="Filtrar galería"></div>
+    <div class="galeria" id="galeria-grid"></div>
+  </div>
+</section>
+
+<!-- ============ EQUIPO ============ -->
+<section class="seccion seccion--equipo" id="equipo">
+  <div class="contenedor">
+    <div class="equipo">
+      <div class="equipo__uni revelar">
+        <img src="img/unap.png" alt="Escudo de la Universidad Nacional del Altiplano" width="96" height="104">
+        <div>
+          <strong>Universidad Nacional del Altiplano</strong>
+          <span>Facultad de Ingeniería Mecánica Eléctrica, Electrónica y Sistemas</span>
+          <span class="teal">Escuela Profesional de Ingeniería de Sistemas</span>
+        </div>
+      </div>
+      <div class="equipo__datos revelar">
+        <div><p class="eyebrow">Presentado por</p><ul><li>Canaza Chagua Yoel Nhelio</li><li>Huaycani Cartagena Brayan Jhoel</li><li>Ordoñez Ramos Arnold Daniel</li></ul></div>
+        <div><p class="eyebrow">Curso</p><p>Aprendizaje de Máquina</p><p class="eyebrow">Docente</p><p>Ing. Alodia Flores Arnao</p></div>
+      </div>
+    </div>
+    <details class="referencias revelar">
+      <summary>Referencias y limitaciones</summary>
+      <div class="referencias__cuerpo">
+        <ul>
+          <li>Hofmann, H. (1994). <em>Statlog (German Credit Data)</em> [Dataset]. UCI Machine Learning Repository. <a href="https://doi.org/10.24432/C5NC77" target="_blank" rel="noopener">doi.org/10.24432/C5NC77</a></li>
+          <li>Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. <em>JMLR, 12</em>, 2825–2830.</li>
+          <li>Breiman, L. (2001). Random forests. <em>Machine Learning, 45</em>(1), 5–32.</li>
+          <li>Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. <em>The Annals of Statistics, 29</em>(5), 1189–1232.</li>
+          <li>Elkan, C. (2001). The foundations of cost-sensitive learning. <em>Proceedings of IJCAI-01</em>, 973–978.</li>
+          <li>Hardt, M., Price, E., &amp; Srebro, N. (2016). Equality of opportunity in supervised learning. <em>NeurIPS, 29</em>.</li>
+        </ul>
+        <p><strong>Limitaciones:</strong> solo 1 000 registros (250 de prueba); datos alemanes antiguos en marcos alemanes; el dataset solo incluye créditos aprobados (sesgo de selección); la variable de sexo mezcla estado civil; no incluye el ingreso; la matriz 5:1 es una simplificación.</p>
+      </div>
+    </details>
+  </div>
+</section>
+</main>
+
+<footer class="pie">
+  <div class="contenedor pie__inner">
+    <span>Puno – Perú · 2026</span>
+    <span>Proyecto académico · Aprendizaje de Máquina · UNA Puno</span>
+  </div>
+</footer>
+
+<!-- Tooltip compartido y visor de imágenes -->
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+<dialog class="visor" id="visor" aria-label="Gráfico ampliado">
+  <button class="visor__cerrar" id="visorCerrar" type="button" aria-label="Cerrar">×</button>
+  <button class="visor__nav visor__nav--ant" id="visorAnt" type="button" aria-label="Anterior">‹</button>
+  <figure><img id="visorImg" alt=""><figcaption id="visorCap"></figcaption></figure>
+  <button class="visor__nav visor__nav--sig" id="visorSig" type="button" aria-label="Siguiente">›</button>
+</dialog>
+
+<script src="js/datos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
